@@ -1,0 +1,48 @@
+# Define variables for Azure DevOps organization and project
+$organization = "your_organization"
+$project = "your_project"
+$patToken = "your_personal_access_token"
+
+# Define source and target work item IDs
+$sourceWorkItemId = "SOURCE_USER_STORY_ID"
+$targetWorkItemId = "TARGET_USER_STORY_ID"
+
+# Base64 encode the PAT token for authorization
+$base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$($patToken)"))
+
+# Get the source work item with its relations (child links)
+$sourceWorkItemUrl = "https://dev.azure.com/$organization/$project/_apis/wit/workitems/$sourceWorkItemId?`$expand=relations&api-version=7.1-preview.3"
+$sourceWorkItemResponse = Invoke-RestMethod -Uri $sourceWorkItemUrl -Headers @{Authorization=("Basic {0}" -f $base64AuthInfo)} -Method Get
+
+# Prepare to add child links to the target work item
+$relationsToCopy = @()
+
+foreach ($relation in $sourceWorkItemResponse.relations) {
+    if ($relation.rel -eq "System.LinkTypes.Hierarchy-Forward") {
+        # Keep only child links
+        $relationsToCopy += @{
+            "op" = "add";
+            "path" = "/relations/-";
+            "value" = @{
+                "rel" = "System.LinkTypes.Hierarchy-Forward";
+                "url" = $relation.url;
+            }
+        }
+    }
+}
+
+# If there are child links to copy
+if ($relationsToCopy.Count -gt 0) {
+    $targetWorkItemUrl = "https://dev.azure.com/$organization/$project/_apis/wit/workitems/$targetWorkItemId?api-version=7.1-preview.3"
+    
+    # Add child links to the target work item
+    $response = Invoke-RestMethod -Uri $targetWorkItemUrl `
+        -Headers @{Authorization=("Basic {0}" -f $base64AuthInfo)} `
+        -Method Patch `
+        -ContentType "application/json-patch+json" `
+        -Body ($relationsToCopy | ConvertTo-Json)
+    
+    Write-Host "Child links copied successfully to work item $targetWorkItemId."
+} else {
+    Write-Host "No child links found to copy."
+}
