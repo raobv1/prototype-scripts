@@ -1,0 +1,20 @@
+trigger:
+  branches:
+    include:
+    - master
+variables:
+- group: replace-web-config
+stages:
+- stage: __default
+  jobs:
+  - job: Job
+    pool:
+      vmImage: 'windows-latest'
+    steps:
+    - task: NuGetToolInstaller@1
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: "$filePath = \"$(System.DefaultWorkingDirectory)/WebConfigSampleApp/Web.config\"\n\n# Read the web.config file content\n$content = Get-Content $filePath -Raw\n\n# Loop through each variable defined in the variable group\n $variables = Get-ChildItem Env: | Where-Object { $_.Name -match  '^_.*' } \n\n\nforeach ($var in $variables) {\n   \n    Write-Host \"$($var.Name): $($var.Value)\"\n\n    # Replace occurrences of the variable name in the content with its value\n    $content = $content -replace \"$($var.Name)\", \"$($var.Value)\"\n}\n\n# Write the updated content back to the web.config file\nSet-Content $filePath $content\nGet-Content \"$(System.DefaultWorkingDirectory)/WebConfigSampleApp/Web.config\"\n"
+        failOnStderr: true
+
