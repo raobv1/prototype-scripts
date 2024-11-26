@@ -1,0 +1,52 @@
+name: Build and Upload to S3
+
+on:
+  push:
+    branches:
+      - master  # Trigger the workflow when pushing to the main branch
+
+jobs:
+  build:
+    runs-on: windows-latest  # Use Windows runner
+
+    steps:
+    # Step 1: Checkout the code
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Step 2: Set up .NET SDK
+    - name: Set up .NET SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '7.0'  # Use the appropriate .NET version
+
+    # Step 3: Restore dependencies
+    - name: Restore dependencies
+      run: dotnet restore
+
+    # Step 4: Build the .NET application
+    - name: Build the application
+      run: dotnet build --configuration Release
+
+    # Step 5: Publish the application (output to a folder)
+    - name: Publish the application
+      run: dotnet publish --configuration Release --output ./publish
+
+    # Step 6: Zip the published folder to create an artifact (Windows command)
+    - name: Create a ZIP artifact and copy to S3
+      run: |
+        Compress-Archive -Path ./publish/* -DestinationPath ./publish.zip
+        # Set AWS environment variables for the current session
+        $env:AWS_ACCESS_KEY_ID = "${{ secrets.AWS_ACCESS_KEY_ID }}"
+        $env:AWS_SECRET_ACCESS_KEY = "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+        $env:AWS_DEFAULT_REGION = "us-east-1"  # Replace with your preferred AWS region
+        aws s3 cp ./publish.zip s3://github-copy-artifacts/publish.zip
+        $timestamp = Get-Date -Format "yyyy-MM-dd-HHmm"
+        
+        aws elasticbeanstalk create-application-version --application-name "test"  --version-label $timestamp --source-bundle S3Bucket=github-copy-artifacts,S3Key=publish.zip
+        aws elasticbeanstalk update-environment --environment-name "Test-env" --version-label $timestamp
+
+    
+         
+
+    # Step 7: Upload to S3 using the S3 Sync action
