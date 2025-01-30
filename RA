@@ -1,11 +1,3 @@
-RA IT Dev SecOps 
+A GTA team member creates a feature branch from the team's branch (TBD) and develops the code locally. After validating functionality, they merge the changes into the team's feature branch.
 
- 
-
-GTA Team Development 
-
-A GTA team member creates a feature branch from the team's branch (TBD) and develops the code locally. After validating functionality, they merge the changes into the team's feature branch. 
-
-Once the GTA team merges their code into the team's branch (TBD), the CI/CD pipeline is triggered, initiating an automated build, security scanning, and deployment process. The code is then deployed to the GTA Team's development environment, ensuring secure and continuous integration within the DevSecOps framework. 
-
- 
+Once the GTA team merges their code into the team's branch (TBD), the CI/CD pipeline is triggered, initiating an automated build, security scanning, and deployment process. The code is then deployed to the GTA Team's development environment. As the code is deployed to the development servers, the Development and QA teams will validate the implementation. Upon successful validation, the code will be promoted to the QA/UAT environment for further testing and approval.
