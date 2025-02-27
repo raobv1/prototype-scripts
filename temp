@@ -1,0 +1,14 @@
+RAD Application – CI/CD Considerations
+
+Currently, the RAD pipeline runs on the Gov Deploy Agent, taking approximately 45 to 90 minutes to complete. To avoid business impact, it must be executed within this timeframe. Additionally, the same Gov Deploy Agent is shared with other teams, which can lead to resource constraints.
+
+With the increasing demands of RAD, the DevOps team recommends provisioning a dedicated server to enhance efficiency for both RAD and other teams.
+
+Pros:
+Ensures RAD pipelines run independently without affecting other pipelines.
+Scales efficiently to accommodate growing RAD team needs.
+Enables a dedicated pipeline schedule for better reliability.
+Prevents potential delays and resource conflicts with other teams.
+Cons:
+Expanding RAD needs may impact overall infrastructure planning.
+Additional costs associated with provisioning and maintaining a dedicated server.
